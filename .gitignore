@@ -1,0 +1,15 @@
+# Gradle and Android Studio
+.gradle/
+build/
+local.properties
+.idea/
+*.iml
+.kotlin/
+captures/
+.externalNativeBuild/
+.cxx/
+# macOS
+.DS_Store
+# signing material never belongs here: releases are debug-signed
+*.jks
+*.keystore

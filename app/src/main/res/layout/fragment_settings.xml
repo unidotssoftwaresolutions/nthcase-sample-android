@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Settings, the one screen in classic XML Views. Every id below is a spec id (SPEC.md §Test ids › settings). -->
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/settings_screen"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingHorizontal="16dp"
+        android:paddingBottom="24dp">
+
+        <TextView style="@style/Mossgrove.SectionHeader" android:text="@string/settings_section_account" />
+
+        <TextView
+            android:id="@+id/settings_account_email"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fontFamily="monospace"
+            android:paddingVertical="8dp"
+            android:textAppearance="?attr/textAppearanceBodyLarge" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/settings_orders"
+                style="@style/Widget.Material3.Button.OutlinedButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:layout_weight="1"
+                android:minHeight="48dp"
+                android:text="@string/settings_orders" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/settings_sign_out"
+                style="@style/Widget.Material3.Button.TonalButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:minHeight="48dp"
+                android:text="@string/settings_sign_out" />
+        </LinearLayout>
+
+        <TextView style="@style/Mossgrove.SectionHeader" android:text="@string/settings_section_appearance" />
+
+        <RadioGroup
+            android:id="@+id/settings_theme"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:contentDescription="@string/settings_theme">
+
+            <com.google.android.material.radiobutton.MaterialRadioButton
+                android:id="@+id/settings_theme_system"
+                style="@style/Mossgrove.Radio"
+                android:text="@string/settings_theme_system" />
+
+            <com.google.android.material.radiobutton.MaterialRadioButton
+                android:id="@+id/settings_theme_light"
+                style="@style/Mossgrove.Radio"
+                android:text="@string/settings_theme_light" />
+
+            <com.google.android.material.radiobutton.MaterialRadioButton
+                android:id="@+id/settings_theme_dark"
+                style="@style/Mossgrove.Radio"
+                android:text="@string/settings_theme_dark" />
+        </RadioGroup>
+
+        <TextView style="@style/Mossgrove.SectionHeader" android:text="@string/settings_section_notifications" />
+
+        <com.google.android.material.materialswitch.MaterialSwitch
+            android:id="@+id/settings_notifications"
+            style="@style/Mossgrove.Switch"
+            android:text="@string/settings_notifications" />
+
+        <TextView
+            android:id="@+id/settings_notifications_status"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:accessibilityLiveRegion="polite"
+            android:textAppearance="?attr/textAppearanceBodyMedium"
+            android:textColor="?attr/colorOnSurfaceVariant" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/settings_send_notification"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minHeight="48dp"
+            android:text="@string/settings_send_notification" />
+
+        <TextView style="@style/Mossgrove.SectionHeader" android:text="@string/settings_section_testing" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/settings_testing_help"
+            android:textAppearance="?attr/textAppearanceBodyMedium"
+            android:textColor="?attr/colorOnSurfaceVariant" />
+
+        <com.google.android.material.materialswitch.MaterialSwitch
+            android:id="@+id/settings_slow_loading"
+            style="@style/Mossgrove.Switch"
+            android:text="@string/settings_slow_loading" />
+
+        <com.google.android.material.materialswitch.MaterialSwitch
+            android:id="@+id/settings_fail_loading"
+            style="@style/Mossgrove.Switch"
+            android:text="@string/settings_fail_loading" />
+
+        <TextView style="@style/Mossgrove.SectionHeader" android:text="@string/settings_section_data" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/settings_reset"
+            style="@style/Widget.Material3.Button.OutlinedButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="48dp"
+            android:text="@string/settings_reset"
+            android:textColor="?attr/colorError"
+            app:strokeColor="?attr/colorError" />
+
+        <TextView
+            android:id="@+id/settings_version"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:gravity="center"
+            android:textAppearance="?attr/textAppearanceLabelMedium"
+            android:textColor="?attr/colorOnSurfaceVariant" />
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>

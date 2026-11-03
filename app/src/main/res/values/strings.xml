@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Mossgrove</string>
+    <string name="cancel">Cancel</string>
+    <string name="channel_orders">Order updates</string>
+
+    <string name="settings_section_account">Account</string>
+    <string name="settings_signed_out">Not signed in</string>
+    <string name="settings_orders">Order history</string>
+    <string name="settings_sign_out">Sign out</string>
+
+    <string name="settings_section_appearance">Appearance</string>
+    <string name="settings_theme">Theme</string>
+    <string name="settings_theme_system">Follow the system</string>
+    <string name="settings_theme_light">Light</string>
+    <string name="settings_theme_dark">Dark</string>
+
+    <string name="settings_section_notifications">Notifications</string>
+    <string name="settings_notifications">Order updates</string>
+    <string name="settings_notifications_on">On: we\'ll tell you when an order is placed.</string>
+    <string name="settings_notifications_off">Off</string>
+    <string name="settings_notifications_not_allowed">Not allowed. Turn this on to be asked.</string>
+    <string name="settings_send_notification">Send a test notification</string>
+    <string name="notification_test_title">Your order is packed</string>
+    <string name="notification_test_body">A test notification from Mossgrove.</string>
+    <string name="notification_sent">Notification sent</string>
+
+    <string name="settings_section_testing">Testing</string>
+    <string name="settings_testing_help">These change how the shop\'s lists load. Nothing goes over the network.</string>
+    <string name="settings_slow_loading">Slow loading (3 seconds)</string>
+    <string name="settings_fail_loading">Fail the first load</string>
+
+    <string name="settings_section_data">Data</string>
+    <string name="settings_reset">Empty the cart and orders</string>
+    <string name="settings_reset_title">Empty the cart and orders?</string>
+    <string name="settings_reset_body">You stay signed in. This can\'t be undone.</string>
+    <string name="settings_reset_confirm">Empty</string>
+    <string name="settings_reset_done">Cart and orders emptied</string>
+
+    <string name="settings_version">Mossgrove %1$s · spec %2$s · a sample app for NthCase</string>
+</resources>

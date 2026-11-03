@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The WebView's view id, so Appium sees com.nthcase.sample:id/webview (SPEC.md §Test ids › web view). -->
+    <item name="webview" type="id" />
+</resources>

@@ -1,0 +1,66 @@
+# Every check: the unit tests and the Robolectric UI tests on the JVM, the debug APK and the instrumented-test APK.
+# build.yml and release.yml call this workflow; it never runs on its own.
+#
+# Android has no device suite: every UI test of this app runs on the JVM with Robolectric, so no job here needs an
+# emulator, and every run is this one job (about 1 to 5 minutes, depending on Gradle's cache).
+#
+# Every action is named by its commit, not by a tag someone can move. The version each SHA was on 2026-11-03 is in the
+# comment beside it. To update one, look up the new version's commit, read what changed, and change both.
+name: ci
+
+on:
+  workflow_call:
+    inputs:
+      version:
+        description: What the APK is named after, mossgrove-android-<version>-debug.apk (the tag, or build-<run number>)
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Test, APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        timeout-minutes: 5
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        timeout-minutes: 5
+        with:
+          distribution: temurin
+          java-version: "21"
+      - uses: gradle/actions/wrapper-validation@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+        timeout-minutes: 5
+      # Caches Gradle's own folders (the wrapper, the dependencies, the build cache) under Gradle's own keys. Only runs
+      # on main write the cache; a pull request reads it.
+      - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+        timeout-minutes: 10
+      # Unit tests and the Robolectric UI tests run on the JVM: no emulator in this job.
+      - name: Tests and the APKs
+        timeout-minutes: 20
+        run: ./gradlew --no-daemon testDebugUnitTest assembleDebug assembleDebugAndroidTest
+      - name: Name the APK after the version
+        timeout-minutes: 2
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          mkdir -p dist
+          cp app/build/outputs/apk/debug/app-debug.apk "dist/mossgrove-android-${VERSION}-debug.apk"
+          (cd dist && sha256sum ./*.apk > SHA256SUMS)
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        timeout-minutes: 5
+        with:
+          name: mossgrove-android-apk
+          path: dist/
+          if-no-files-found: error
+          retention-days: 14
+      - if: failure()
+        timeout-minutes: 5
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: test-reports
+          path: app/build/reports/tests/
+          retention-days: 7

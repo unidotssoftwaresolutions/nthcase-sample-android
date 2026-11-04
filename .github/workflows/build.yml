@@ -1,45 +1,51 @@
-# Builds and tests every pull request, every push to main, and on demand.
+# When CI runs. The job itself is in ci.yml, which release.yml calls too.
 #
-# Every action is named by its commit, not by a tag someone can move. The version each SHA was on 2026-11-03 is in the
-# comment beside it. To update one, look up the new version's commit, read what changed, and change both.
+#   a push to main, a pull request, "Run workflow", every Monday    the tests and the APKs (ci.yml), on ubuntu-latest
+#
+# Android has no device suite to hold back: its UI tests run on the JVM with Robolectric, never on an emulator. The
+# weekly run catches drift in the runner, the JDK and Gradle's downloads.
+#
+# A push or a pull request that changes only the files below starts nothing: no test, no build step and no script reads
+# them. SPEC.md, nthcase/ and art/ are NOT here: the tests read nthcase/ and art/, and SPEC.md is a shared source.
+#
+# A newer push to the same branch or pull request cancels the older run. "Run workflow" and the weekly run are never
+# cancelled by a push, and release.yml has no concurrency at all: a release always runs to its end.
 name: build
 
 on:
-  pull_request:
   push:
     branches: [main]
+    paths-ignore:
+      - README.md
+      - CONTRIBUTING.md
+      - SECURITY.md
+      - DESIGN.md
+      - LICENSE
+      - NOTICE
+      - docs/screenshots/**
+  pull_request:
+    paths-ignore:
+      - README.md
+      - CONTRIBUTING.md
+      - SECURITY.md
+      - DESIGN.md
+      - LICENSE
+      - NOTICE
+      - docs/screenshots/**
   workflow_dispatch:
+  schedule:
+    # Monday 03:17 UTC, as the other four Mossgrove apps
+    - cron: "17 3 * * 1"
 
 permissions:
   contents: read
 
 concurrency:
-  group: build-${{ github.ref }}
-  cancel-in-progress: true
+  group: build-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'push' || github.event_name == 'pull_request' }}
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
-        with:
-          distribution: temurin
-          java-version: "21"
-      - uses: gradle/actions/wrapper-validation@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
-      - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
-      # Unit tests and the Robolectric UI tests run on the JVM: no emulator in this job.
-      - run: ./gradlew --no-daemon testDebugUnitTest assembleDebug assembleDebugAndroidTest
-      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        with:
-          name: mossgrove-debug-apk
-          path: app/build/outputs/apk/debug/app-debug.apk
-          if-no-files-found: error
-          retention-days: 14
-      - if: failure()
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        with:
-          name: test-reports
-          path: app/build/reports/tests/
-          retention-days: 7
+  ci:
+    uses: ./.github/workflows/ci.yml
+    with:
+      version: build-${{ github.run_number }}

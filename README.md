@@ -122,7 +122,7 @@ docs/screenshots/                       every screen, light and dark
 
 Every run is one job on `ubuntu-latest`: the unit tests and the Robolectric UI tests on the JVM, and the APKs, in 1 to
 5 minutes. Android has no device suite: no test here needs an emulator. It runs on a push to `main`, on a pull
-request, on "Run workflow", every Monday at 03:17 UTC, and before every release: a `v*` tag publishes only when it is
+request, on "Run workflow", at 03:17 UTC on the 1st of each month, and before every release: a `v*` tag publishes only when it is
 green. A push that changes only `README.md`, `CONTRIBUTING.md`, `SECURITY.md`, `DESIGN.md`, `LICENSE`, `NOTICE` or
 `docs/screenshots/` starts nothing. To run it by hand, open Actions → build → Run workflow on `main`, or run
 `gh workflow run build.yml --ref main`. The job is in [.github/workflows/ci.yml](.github/workflows/ci.yml).

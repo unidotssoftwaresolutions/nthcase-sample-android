@@ -1,14 +1,14 @@
 # When CI runs. The job itself is in ci.yml, which release.yml calls too.
 #
-#   a push to main, a pull request, "Run workflow", every Monday    the tests and the APKs (ci.yml), on ubuntu-latest
+#   a push to main, a pull request, "Run workflow", the 1st monthly  the tests and the APKs (ci.yml), on ubuntu-latest
 #
 # Android has no device suite to hold back: its UI tests run on the JVM with Robolectric, never on an emulator. The
-# weekly run catches drift in the runner, the JDK and Gradle's downloads.
+# monthly run catches drift in the runner, the JDK and Gradle's downloads.
 #
 # A push or a pull request that changes only the files below starts nothing: no test, no build step and no script reads
 # them. SPEC.md, nthcase/ and art/ are NOT here: the tests read nthcase/ and art/, and SPEC.md is a shared source.
 #
-# A newer push to the same branch or pull request cancels the older run. "Run workflow" and the weekly run are never
+# A newer push to the same branch or pull request cancels the older run. "Run workflow" and the monthly run are never
 # cancelled by a push, and release.yml has no concurrency at all: a release always runs to its end.
 name: build
 
@@ -34,8 +34,8 @@ on:
       - docs/screenshots/**
   workflow_dispatch:
   schedule:
-    # Monday 03:17 UTC, as the other four Mossgrove apps
-    - cron: "17 3 * * 1"
+    # 03:17 UTC on the 1st of each month, as the other four Mossgrove apps
+    - cron: "17 3 1 * *"
 
 permissions:
   contents: read

@@ -11,8 +11,8 @@ android {
         applicationId = "com.nthcase.sample"
         minSdk = 26
         targetSdk = 37
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = 2
+        versionName = "1.1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -53,6 +53,9 @@ dependencies {
     implementation(libs.androidx.fragment.compose)
     implementation(libs.androidx.appcompat)
     implementation(libs.google.material)
+    // the Lobby (Views): its pager and its lists. Material brings the same versions; they are named here because the app uses them itself.
+    implementation(libs.androidx.recyclerview)
+    implementation(libs.androidx.viewpager2)
 
     implementation(platform(libs.compose.bom))
     implementation(libs.compose.ui)

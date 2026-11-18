@@ -38,4 +38,11 @@
     <string name="settings_reset_done">Cart and orders emptied</string>
 
     <string name="settings_version">Mossgrove %1$s · spec %2$s · a sample app for NthCase</string>
+
+    <!-- the Lobby in Views (SPEC.md §5, spec 1.1); the rest of its texts are in data/Lobby.kt, shared with Compose -->
+    <string name="lobby_touch_log_label">Touch log</string>
+    <string name="lobby_reset">Reset</string>
+    <string name="lobby_saved_delay_label">Saved appears after</string>
+    <string name="lobby_auto_advance">Auto-advance</string>
+    <string name="lobby_pager_shown">Show the pager</string>
 </resources>

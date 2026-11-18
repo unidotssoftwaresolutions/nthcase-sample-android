@@ -72,14 +72,14 @@ data class AisleTints(val kitchen: AisleTint, val desk: AisleTint, val garden: A
     }
 }
 
-private val LightAisles = AisleTints(
+internal val LightAisles = AisleTints(
     kitchen = AisleTint(Color(0xFFDDEBE5), Color(0xFF2E5E55)),
     desk = AisleTint(Color(0xFFE2E7EE), Color(0xFF3F5466)),
     garden = AisleTint(Color(0xFFDCEBD3), Color(0xFF3E6A2E)),
     home = AisleTint(Color(0xFFE8E4DE), Color(0xFF5B5148)),
 )
 
-private val DarkAisles = AisleTints(
+internal val DarkAisles = AisleTints(
     kitchen = AisleTint(Color(0xFF23332E), Color(0xFF95D1C2)),
     desk = AisleTint(Color(0xFF222A33), Color(0xFFB4C5D8)),
     garden = AisleTint(Color(0xFF263322), Color(0xFFA8D493)),

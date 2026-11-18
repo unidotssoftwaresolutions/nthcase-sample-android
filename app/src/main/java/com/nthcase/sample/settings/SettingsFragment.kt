@@ -129,6 +129,6 @@ class SettingsFragment : Fragment() {
     }
 
     companion object {
-        const val SPEC_VERSION = "1.0"
+        const val SPEC_VERSION = "1.1"
     }
 }

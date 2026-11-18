@@ -38,6 +38,12 @@ object AppState {
 
     var themeMode by mutableStateOf(ThemeMode.System)
 
+    /** The Lobby's "Saved appears after", in seconds (SPEC.md §5, 1.1). Kept until the app closes; a cold start is 0. */
+    var lobbySavedDelay by mutableStateOf(0)
+
+    /** The Lobby's "Show the pager" (SPEC.md §5, 1.1). Kept until the app closes, as the delay is; a cold start shows it. */
+    var lobbyPagerShown by mutableStateOf(true)
+
     /** A deep link that arrived before sign-in; opened right after it. */
     var pendingItemId by mutableStateOf<String?>(null)
 
@@ -79,6 +85,8 @@ object AppState {
         failFirstLoad = false
         orderUpdates = false
         themeMode = ThemeMode.System
+        lobbySavedDelay = 0
+        lobbyPagerShown = true
         pendingItemId = null
     }
 }

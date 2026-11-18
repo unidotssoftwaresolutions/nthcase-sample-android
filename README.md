@@ -6,12 +6,17 @@ Clone it, build it, and run your first NthCase test on it in minutes.
 
 It is one of five identical Mossgrove apps. The same screens, test ids, texts and scenarios are built in Kotlin +
 Jetpack Compose (this one), SwiftUI, Flutter, React Native and Ionic, all from one spec: [SPEC.md](SPEC.md),
-**spec 1.0**. Every verb NthCase supports has a place to land, and so do the hard cases real apps have: a slow screen,
-a failed load with retry, a web view, a system permission prompt, a modal, and a screen with no test ids at all.
+**spec 1.1**. Every verb NthCase supports has a place to land, and so do the hard cases real apps have: a slow screen,
+a failed load with retry, a web view, a system permission prompt, a modal, a screen with no test ids at all, and (new
+in 1.1) the **Lobby**: a screen of many scrollers with a touch log that says if anything was touched by accident.
 
 - No network, no analytics, no ads, no tracking, no third-party SDKs. Everything is seeded inside the app, so every run
   is the same.
 - One screen, Settings, is built with classic **XML Views and a Fragment**, so both Android UI toolkits are covered.
+- The Lobby is built twice: **Lobby** in Compose, and **Lobby (Views)** in Android Views (RecyclerView, ViewPager2, a
+  nested RecyclerView and a view that scrolls both ways), because the two toolkits decide differently which parent
+  takes a drag. Its first scrollable is the promo pager; with **Show the pager** off it is the **Top 10** row, a row of
+  tiles that nothing vertical encloses.
 
 | Sign in | Shop | Item | Cart |
 | --- | --- | --- | --- |
@@ -22,8 +27,12 @@ a failed load with retry, a web view, a system permission prompt, a modal, and a
 | <img src="docs/screenshots/light/14-gestures.png" width="180" alt="Gestures"> | <img src="docs/screenshots/light/17-slow-done.png" width="180" alt="Delivery slots"> | <img src="docs/screenshots/light/20-orders-error.png" width="180" alt="Error + retry"> | <img src="docs/screenshots/light/21-gift-cards.png" width="180" alt="No test ids"> |
 | Settings (XML) | XML dialog | Empty search | Deep link, unknown id |
 | <img src="docs/screenshots/light/22-settings.png" width="180" alt="Settings (XML)"> | <img src="docs/screenshots/light/23-settings-dialog.png" width="180" alt="XML dialog"> | <img src="docs/screenshots/light/05-shop-no-match.png" width="180" alt="Empty search"> | <img src="docs/screenshots/light/24-deep-link-unknown.png" width="180" alt="Deep link, unknown id"> |
+| Lobby | Lobby, the board | Lobby, quick sheet | Lobby (Views) |
+| <img src="docs/screenshots/light/25-lobby.png" width="180" alt="Lobby"> | <img src="docs/screenshots/light/26-lobby-board.png" width="180" alt="Lobby, the board"> | <img src="docs/screenshots/light/27-lobby-sheet.png" width="180" alt="Lobby, quick sheet"> | <img src="docs/screenshots/light/28-lobby-views.png" width="180" alt="Lobby (Views)"> |
+| Lobby, pager off | Lobby (Views), pager off | Lobby, pager off (dark) | Lobby (Views), pager off (dark) |
+| <img src="docs/screenshots/light/30-lobby-no-pager.png" width="180" alt="Lobby, pager off"> | <img src="docs/screenshots/light/31-lobby-views-no-pager.png" width="180" alt="Lobby (Views), pager off"> | <img src="docs/screenshots/dark/30-lobby-no-pager.png" width="180" alt="Lobby, pager off, dark"> | <img src="docs/screenshots/dark/31-lobby-views-no-pager.png" width="180" alt="Lobby (Views), pager off, dark"> |
 
-All 24 screens, light and dark, are in [docs/screenshots](docs/screenshots). They are drawn on the JVM by the tests
+All 31 screens, light and dark, are in [docs/screenshots](docs/screenshots). They are drawn on the JVM by the tests
 (Robolectric), not on a device.
 
 ## Test account
@@ -47,7 +56,7 @@ You need JDK 17 or newer (21 is what CI uses) and the Android SDK (`ANDROID_HOME
 ./gradlew assembleDebug
 ```
 
-The APK is `app/build/outputs/apk/debug/app-debug.apk`. It is debug-signed, about 18 MB (an unminified debug
+The APK is `app/build/outputs/apk/debug/app-debug.apk`. It is debug-signed, about 17 MB (an unminified debug
 build). Every [release](../../releases) also has a ready-built one.
 
 ```bash
@@ -61,7 +70,7 @@ on its screen, in the accessibility tree Appium reads. They play the scenarios' 
 
 | | |
 | --- | --- |
-| Language and UI | Kotlin, Jetpack Compose, Material 3, Navigation Compose; Settings in XML Views + Fragment (Material Components) |
+| Language and UI | Kotlin, Jetpack Compose, Material 3, Navigation Compose; Settings in XML Views + Fragment (Material Components); Lobby (Views) in Android Views (RecyclerView, ViewPager2, Material Components) |
 | SDK | minSdk 26 (Android 8.0), targetSdk and compileSdk 37 (Android 17) |
 | Build | Gradle 9.8.2 (wrapper), Android Gradle Plugin 9.5, Kotlin 2.4, version catalog in `gradle/libs.versions.toml` |
 | Tests | JUnit 4, Robolectric 4.17, Compose UI test |
@@ -95,8 +104,20 @@ Mossgrove and run it on my Android phone".
 | a screen with no test ids | Lab › Gift cards | 10 |
 | extract, startif / endif | the cart total; sign in only if asked | 03, 06 |
 | deep link | `nthcase-sample://item/7` | 11 |
+| scroll to an element, inside a screen of many scrollers | Lab › Lobby: the page, a sideways tile row, a board that scrolls both ways | 12, 13, 14 |
+| swipe a pager; longpress, doubletap on tiles and cells | Lab › Lobby | 13, 14, 15 |
+| a control that appears late (waitFor), and a touch log that catches a scroll acting as a touch | Lab › Lobby, Lab › Lobby (Views) | 16, 17, 18 |
+| the same, with the pager off, so the first scrollable is the Top 10 row of tiles | Lab › Lobby, Lab › Lobby (Views) | 19, 20 |
 
 The full table, with every check type and the known gaps, is in [SPEC.md §8](SPEC.md#8-verb-coverage).
+
+## Dependencies
+
+Every runtime dependency is published by Google, as part of Android Jetpack (AndroidX) or Material Components:
+Core KTX, Activity Compose, Navigation Compose, Lifecycle, Fragment (KTX and Compose), AppCompat, RecyclerView and
+ViewPager2 (named for Lobby (Views); Material already brought the same versions), Material Components, and the
+Compose BOM (UI, graphics, Material 3, tooling preview). Test and build tools that never ship in the app: JUnit 4,
+Robolectric, AndroidX Test, Compose UI test, Gradle and the Android Gradle Plugin.
 
 ## Test ids
 
@@ -104,14 +125,19 @@ Every control has a stable test id from one list shared by all five apps: [nthca
 In Compose they are `Modifier.testTag` with `testTagsAsResourceId`, so Appium sees `resource-id="shop_search"`. On
 the XML Settings screen they are `android:id`, so Appium sees `resource-id="com.nthcase.sample:id/settings_reset"`.
 The care-guide page's elements have the same HTML `id` and `data-testid`. The Gift cards screen has none, on purpose.
+Lobby (Views) uses the Lobby's ids as view ids, declared in `res/values/lobby_ids.xml` (made from the JSON; a test
+checks it), so Appium sees `resource-id="com.nthcase.sample:id/lobby_pager"` there and `resource-id="lobby_pager"` in
+the Compose Lobby.
 
 ## Layout
 
 ```
-app/src/main/java/com/nthcase/sample/   MainActivity, TestIds, data/, ui/ (Compose screens), settings/ (the Fragment)
-app/src/main/res/layout/                fragment_settings.xml, dialog_reset.xml: the XML screen
+app/src/main/java/com/nthcase/sample/   MainActivity, TestIds, data/, ui/ (Compose screens), settings/ (the Fragment),
+                                        lobby/ (Lobby (Views): the Fragment, the two-way BoardView, GlyphDrawable)
+app/src/main/res/layout/                fragment_settings.xml, dialog_reset.xml: the XML screen; fragment_lobby.xml
 app/src/main/assets/web/                care-guide.html, the web view's page
-app/src/test/                           JVM tests: data, spec ids, screens, flows, deep link, screenshots
+app/src/test/                           JVM tests: data, spec ids, screens, flows, deep link, screenshots, the Lobby,
+                                        and LobbySwipeTest (UiScrollable's swipe injected through both Lobbies)
 app/src/androidTest/                    one instrumented smoke test
 art/                                    the original icons, product drawings and launcher mark (SVG)
 nthcase/                                test-ids.json and the scenarios

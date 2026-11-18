@@ -30,6 +30,8 @@ private val benches = listOf(
     Bench(TestIds.LAB_SLOW, Routes.SLOW, "Delivery slots", "Loads for 3 seconds, then shows its content"),
     Bench(TestIds.LAB_ORDERS, Routes.ORDERS, "Orders", "An empty state, and an error state with retry"),
     Bench(TestIds.LAB_GIFT_CARDS, Routes.GIFT_CARDS, "Gift cards", "No test ids at all: find things by their text"),
+    Bench(TestIds.LAB_LOBBY, Routes.LOBBY, "Lobby", "A pager, rows, a grid, a list in the list, a board and a late bar item, with a touch log"),
+    Bench(TestIds.LAB_LOBBY_VIEWS, Routes.LOBBY_VIEWS, "Lobby (Views)", "The same Lobby, built with Android Views"),
 )
 
 /** The Lab: Mossgrove's second cabinet, one drawer per test bench. It says plainly what each one is for. */

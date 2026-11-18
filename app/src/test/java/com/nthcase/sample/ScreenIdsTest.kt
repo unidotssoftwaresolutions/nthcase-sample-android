@@ -9,10 +9,14 @@ import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.test.longClick
+import androidx.compose.ui.test.performScrollToIndex
+import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.nthcase.sample.data.AppState
+import com.nthcase.sample.data.Lobby
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
@@ -104,7 +108,8 @@ class ScreenIdsTest {
     fun lab() {
         compose.signIn()
         compose.tap(TestIds.NAV_LAB)
-        present(TestIds.LAB_SCREEN, TestIds.LAB_FORM, TestIds.LAB_GESTURES, TestIds.LAB_WEBVIEW, TestIds.LAB_SLOW, TestIds.LAB_ORDERS, TestIds.LAB_GIFT_CARDS)
+        present(TestIds.LAB_SCREEN, TestIds.LAB_FORM, TestIds.LAB_GESTURES, TestIds.LAB_WEBVIEW, TestIds.LAB_SLOW, TestIds.LAB_ORDERS, TestIds.LAB_GIFT_CARDS,
+            TestIds.LAB_LOBBY, TestIds.LAB_LOBBY_VIEWS)
     }
 
     @Test
@@ -193,6 +198,69 @@ class ScreenIdsTest {
         listOf(TestIds.SETTINGS_RESET_CONFIRM, TestIds.SETTINGS_RESET_CANCEL).forEach { name ->
             val resId = compose.activity.resources.getIdentifier(name, "id", compose.activity.packageName)
             assertNotNull("$name is in the dialog", dialog.findViewById<View>(resId))
+        }
+    }
+
+    /** The Lobby (1.1), Compose: every id in the state its "when" names. LobbyTest reads the same ids in the accessibility tree. */
+    @Test
+    fun lobby() {
+        compose.signIn()
+        compose.openLab(TestIds.LAB_LOBBY)
+        present(TestIds.LOBBY_SCREEN, TestIds.LOBBY_TOUCH_LOG, TestIds.LOBBY_TOUCH_COUNT, TestIds.LOBBY_TOUCH_RESET, TestIds.LOBBY_SAVED_DELAY,
+            *Lobby.DELAYS.map(TestIds::lobbySavedDelay).toTypedArray(), TestIds.LOBBY_PAGER, TestIds.lobbyBanner(1), TestIds.LOBBY_PAGER_POSITION,
+            TestIds.LOBBY_PAGER_AUTO, TestIds.LOBBY_PAGE, TestIds.LOBBY_CHIPS, TestIds.lobbyChip(1), TestIds.lobbyRowPosition(1), TestIds.lobbyRow(1),
+            TestIds.lobbyRowTile(1, 1), TestIds.LOBBY_BAR, *TestIds.lobbyBarItems.toTypedArray(), TestIds.LOBBY_PAGER_SHOWN,
+            TestIds.LOBBY_TOP_ROW_POSITION, TestIds.LOBBY_TOP_ROW, TestIds.lobbyTopRowTile(1))
+        compose.onNodeWithTag(TestIds.LOBBY_TOP_ROW).performScrollToIndex(9)
+        present(TestIds.lobbyTopRowTile(10))
+        fun scrollTo(id: String) = compose.onNodeWithTag(TestIds.LOBBY_PAGE).performScrollToNode(hasTestTag(id))
+        scrollTo(TestIds.LOBBY_GRID); present(TestIds.LOBBY_GRID, TestIds.lobbyGridCell(1))
+        scrollTo(TestIds.LOBBY_INNER_LIST); present(TestIds.LOBBY_INNER_LIST, TestIds.lobbyInnerRow(1))
+        scrollTo(TestIds.LOBBY_BOARD); present(TestIds.LOBBY_BOARD, TestIds.LOBBY_BOARD_POSITION, TestIds.lobbyBoardCell(1, 1))
+        scrollTo(TestIds.LOBBY_FOOTER); present(TestIds.LOBBY_FOOTER)
+        compose.tap(TestIds.lobbyBanner(1))
+        compose.mainClock.advanceTimeBy(400)
+        present(TestIds.LOBBY_PROMO, TestIds.LOBBY_PROMO_BACK)
+        compose.tap(TestIds.LOBBY_PROMO_BACK)
+        compose.onNodeWithTag(TestIds.LOBBY_PAGE).performScrollToIndex(1)
+        compose.tap(TestIds.lobbyRowTile(1, 1))
+        compose.mainClock.advanceTimeBy(400)
+        present(TestIds.LOBBY_DETAIL, TestIds.LOBBY_DETAIL_BACK)
+        compose.tap(TestIds.LOBBY_DETAIL_BACK)
+        compose.onNodeWithTag(TestIds.lobbyRowTile(1, 1)).performTouchInput { longClick() }
+        compose.waitForIdle()
+        present(TestIds.LOBBY_SHEET, TestIds.LOBBY_SHEET_TITLE, *TestIds.lobbySheetButtons.toTypedArray())
+        compose.tap(TestIds.LOBBY_SHEET_PREVIEW)
+        compose.tap(TestIds.LOBBY_BAR_SAVED)
+        present(TestIds.LOBBY_SAVED_SCREEN)
+    }
+
+    /** The Lobby (1.1), Android Views: every id is a view id on the screen; the sheet's in its own dialog window. */
+    @Test
+    fun lobby_views() {
+        compose.signIn()
+        compose.openLab(TestIds.LAB_LOBBY_VIEWS)
+        org.robolectric.shadows.ShadowLooper.idleMainLooper()
+        presentView(TestIds.LOBBY_SCREEN, TestIds.LOBBY_TOUCH_LOG, TestIds.LOBBY_TOUCH_COUNT, TestIds.LOBBY_TOUCH_RESET, TestIds.LOBBY_SAVED_DELAY,
+            *Lobby.DELAYS.map(TestIds::lobbySavedDelay).toTypedArray(), TestIds.LOBBY_PAGER, TestIds.lobbyBanner(1), TestIds.LOBBY_PAGER_POSITION,
+            TestIds.LOBBY_PAGER_AUTO, TestIds.LOBBY_PAGE, TestIds.LOBBY_CHIPS, TestIds.lobbyChip(1), TestIds.lobbyRowPosition(1), TestIds.lobbyRow(1),
+            TestIds.lobbyRowTile(1, 1), TestIds.LOBBY_GRID, TestIds.lobbyGridCell(1), TestIds.LOBBY_INNER_LIST, TestIds.lobbyInnerRow(1),
+            TestIds.LOBBY_BOARD, TestIds.LOBBY_BOARD_POSITION, TestIds.lobbyBoardCell(1, 1), TestIds.LOBBY_FOOTER, TestIds.LOBBY_BAR,
+            *TestIds.lobbyBarItems.toTypedArray(), TestIds.LOBBY_DETAIL, TestIds.LOBBY_DETAIL_BACK, TestIds.LOBBY_PROMO, TestIds.LOBBY_PROMO_BACK,
+            TestIds.LOBBY_SAVED_SCREEN, TestIds.LOBBY_PAGER_SHOWN, TestIds.LOBBY_TOP_ROW_POSITION, TestIds.LOBBY_TOP_ROW,
+            TestIds.lobbyTopRowTile(1))
+        val activity = compose.activity
+        compose.runOnUiThread {
+            activity.findViewById<androidx.recyclerview.widget.RecyclerView>(activity.resources.getIdentifier(TestIds.LOBBY_TOP_ROW, "id", activity.packageName)).scrollToPosition(9)
+        }
+        org.robolectric.shadows.ShadowLooper.idleMainLooper()
+        presentView(TestIds.lobbyTopRowTile(10))
+        compose.runOnUiThread { activity.findViewById<View>(activity.resources.getIdentifier(TestIds.lobbyRowTile(1, 1), "id", activity.packageName)).performLongClick() }
+        org.robolectric.shadows.ShadowLooper.idleMainLooper()
+        val sheet = org.robolectric.shadows.ShadowDialog.getLatestDialog()
+        assertNotNull("the quick sheet is open", sheet)
+        (listOf(TestIds.LOBBY_SHEET, TestIds.LOBBY_SHEET_TITLE) + TestIds.lobbySheetButtons).forEach { name ->
+            assertNotNull("$name is in the sheet", sheet.findViewById<View>(activity.resources.getIdentifier(name, "id", activity.packageName)))
         }
     }
 

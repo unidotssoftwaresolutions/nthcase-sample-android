@@ -12,6 +12,13 @@ import androidx.compose.ui.test.isRoot
 import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.test.click
+import androidx.compose.ui.semantics.getOrNull
+import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.longClick
+import androidx.compose.ui.test.performScrollToIndex
+import androidx.compose.ui.test.performScrollToNode
+import androidx.compose.ui.test.performTouchInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.nthcase.sample.data.AppState
 import org.junit.Assert.assertTrue
@@ -151,6 +158,56 @@ class ScreenPicturesTest {
 
         AppState.pendingItemId = "999"
         shot("24-deep-link-unknown")
+        compose.tap(TestIds.ITEM_NOT_FOUND_ACTION)
+
+        // the Lobby (spec 1.1), Compose
+        compose.openLab(TestIds.LAB_LOBBY)
+        shot("25-lobby")
+        compose.onNodeWithTag(TestIds.LOBBY_PAGE).performScrollToNode(hasTestTag(TestIds.LOBBY_BOARD))
+        compose.onNodeWithTag(TestIds.lobbyBoardCell(3, 4)).performTouchInput { click() }
+        compose.mainClock.advanceTimeBy(400)
+        shot("26-lobby-board")
+        compose.onNodeWithTag(TestIds.LOBBY_PAGE).performScrollToIndex(1)
+        val lobby = compose.onAllNodes(isRoot()).onFirst().captureToImage().asAndroidBitmap()
+        compose.onNodeWithTag(TestIds.lobbyRowTile(1, 2)).performTouchInput { longClick() }
+        compose.waitForIdle()
+        // the quick sheet is a window of its own: draw it over the Lobby, as a phone shows it
+        ShadowLooper.idleMainLooper()
+        val sheetDecor = ShadowDialog.getLatestDialog().window!!.decorView
+        val withSheet = lobby.copy(Bitmap.Config.ARGB_8888, true)
+        Canvas(withSheet).apply {
+            val origin = IntArray(2).also(sheetDecor::getLocationOnScreen)
+            translate(origin[0].toFloat(), origin[1].toFloat())
+            sheetDecor.draw(this)
+        }
+        save(withSheet, File(out, "27-lobby-sheet.png"))
+        compose.tap(TestIds.LOBBY_SHEET_RATE)
+        compose.tap(TestIds.TOP_BAR_BACK)
+
+        // the same Lobby in Android Views
+        compose.tap(TestIds.LAB_LOBBY_VIEWS)
+        ShadowLooper.idleMainLooper()
+        shot("28-lobby-views")
+        val activity = compose.activity
+        compose.runOnUiThread {
+            val page = activity.findViewById<androidx.core.widget.NestedScrollView>(activity.resources.getIdentifier(TestIds.LOBBY_PAGE, "id", activity.packageName))
+            val board = activity.findViewById<android.view.View>(activity.resources.getIdentifier(TestIds.LOBBY_BOARD, "id", activity.packageName))
+            page.scrollTo(0, (board.parent as android.view.View).top - 120)
+        }
+        ShadowLooper.idleMainLooper()
+        shot("29-lobby-views-board")
+
+        // Show the pager off (1.1): the Top 10 row moves up into the pager's place, in both builds
+        compose.runOnUiThread {
+            activity.findViewById<androidx.core.widget.NestedScrollView>(activity.resources.getIdentifier(TestIds.LOBBY_PAGE, "id", activity.packageName)).scrollTo(0, 0)
+            activity.findViewById<android.view.View>(activity.resources.getIdentifier(TestIds.LOBBY_PAGER_SHOWN, "id", activity.packageName)).performClick()
+        }
+        ShadowLooper.idleMainLooper()
+        shot("31-lobby-views-no-pager")
+        compose.tap(TestIds.TOP_BAR_BACK)
+        compose.tap(TestIds.LAB_LOBBY)
+        shot("30-lobby-no-pager")
+        compose.tap(TestIds.LOBBY_PAGER_SHOWN)
     }
 
     private companion object {

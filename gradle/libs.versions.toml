@@ -9,6 +9,8 @@ coreKtx = "1.19.1"
 fragment = "1.9.1"
 appcompat = "1.8.0"
 material = "1.14.0"
+recyclerview = "1.2.1"
+viewpager2 = "1.0.0"
 junit = "4.13.2"
 robolectric = "4.17"
 androidxTestCore = "1.7.0"
@@ -24,6 +26,8 @@ androidx-fragment-ktx = { module = "androidx.fragment:fragment-ktx", version.ref
 androidx-fragment-compose = { module = "androidx.fragment:fragment-compose", version.ref = "fragment" }
 androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "appcompat" }
 google-material = { module = "com.google.android.material:material", version.ref = "material" }
+androidx-recyclerview = { module = "androidx.recyclerview:recyclerview", version.ref = "recyclerview" }
+androidx-viewpager2 = { module = "androidx.viewpager2:viewpager2", version.ref = "viewpager2" }
 compose-bom = { module = "androidx.compose:compose-bom", version.ref = "composeBom" }
 compose-ui = { module = "androidx.compose.ui:ui" }
 compose-ui-graphics = { module = "androidx.compose.ui:ui-graphics" }

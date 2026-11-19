@@ -2,7 +2,12 @@
 # build.yml and release.yml call this workflow; it never runs on its own.
 #
 # Android has no device suite: every UI test of this app runs on the JVM with Robolectric, so no job here needs an
-# emulator, and every run is this one job (about 1 to 5 minutes, depending on Gradle's cache).
+# emulator, and every run is this one job (about 1 to 5 minutes, depending on Gradle's cache), then the summary.
+#
+# It stays one job: the tests and the APKs are one Gradle run of under a minute with a warm cache, and splitting them
+# would start Gradle, its configuration and its cache twice to save less than that on a re-run. The summary lists its
+# checks and fails the run when one failed or was cancelled. There are no retries anywhere: Gradle's test retry is not
+# used, and a flaky test is re-run by a person ("Re-run failed jobs").
 #
 # Every action is named by its commit, not by a tag someone can move. The version each SHA was on 2026-11-03 is in the
 # comment beside it. To update one, look up the new version's commit, read what changed, and change both.
@@ -24,6 +29,9 @@ jobs:
     name: Test, APK
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    outputs:
+      gradle: ${{ steps.gradle.outcome }}
+      name: ${{ steps.name.outcome }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         timeout-minutes: 5
@@ -40,9 +48,11 @@ jobs:
         timeout-minutes: 10
       # Unit tests and the Robolectric UI tests run on the JVM: no emulator in this job.
       - name: Tests and the APKs
+        id: gradle
         timeout-minutes: 20
         run: ./gradlew --no-daemon testDebugUnitTest assembleDebug assembleDebugAndroidTest
       - name: Name the APK after the version
+        id: name
         timeout-minutes: 2
         env:
           VERSION: ${{ inputs.version }}
@@ -72,3 +82,49 @@ jobs:
           name: test-reports
           path: app/build/reports/tests/
           retention-days: 7
+
+  # Every check, from each job's own outcomes, after every job whatever they found. A check is read from its job's
+  # outputs, or, when the job never wrote them (skipped, or stopped before), from the job's result: a skipped check is
+  # listed as skipped, never as passed. Fails the run when any check, or any job outside its checks, failed or was
+  # cancelled; release.yml's github-release needs this workflow, so it publishes only after this is green.
+  summary:
+    name: Every check
+    needs: [build]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Every check
+        timeout-minutes: 5
+        env:
+          CHECK_1: "Unit and Robolectric tests, the debug and test APKs (one Gradle run)|${{ needs.build.outputs.gradle || needs.build.result }}"
+          CHECK_2: "The APK named after the version, SHA256SUMS|${{ needs.build.outputs.name || needs.build.result }}"
+          JOB_1: "build|${{ needs.build.result }}"
+        run: |
+          python3 - <<'EOF'
+          import os, sys
+
+          def numbered(prefix):
+              keys = [k for k in os.environ if k.startswith(prefix) and k[len(prefix):].isdigit()]
+              return [os.environ[k] for k in sorted(keys, key=lambda k: int(k[len(prefix):]))]
+
+          checks = [entry.rpartition("|")[::2] for entry in numbered("CHECK_")]
+          jobs = [entry.rpartition("|")[::2] for entry in numbered("JOB_")]
+          mark = {"success": "✅", "failure": "❌", "cancelled": "🚫"}
+          lines = ["## Every check", "", "| Check | Outcome |", "| --- | --- |"]
+          lines += [f"| {name} | {mark.get(outcome, '⏭️')} {outcome or 'not run'} |" for name, outcome in checks]
+          bad = ("failure", "cancelled")
+          failed = [name for name, outcome in checks if outcome in bad]
+          stray = [f"{job} ({result})" for job, result in jobs if result in bad]
+          if stray and not failed:
+              lines += ["", "A job failed outside its checks: " + ", ".join(stray)]
+          page = "\n".join(lines) + "\n"
+          print(page)
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as summary:
+              summary.write(page)
+          if failed or stray:
+              what = f"{len(failed)} of {len(checks)} checks failed or were cancelled: {', '.join(failed)}" if failed \
+                  else f"a job failed: {', '.join(stray)}"
+              print(f"::error title=Checks failed::{what}")
+              sys.exit(1)
+          EOF

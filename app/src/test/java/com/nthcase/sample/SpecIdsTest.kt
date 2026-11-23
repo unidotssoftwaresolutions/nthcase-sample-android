@@ -14,7 +14,7 @@ import java.lang.reflect.Modifier
 class SpecIdsTest {
     private val specIds: Set<String> by lazy {
         val json = File("../nthcase/test-ids.json").readText()
-        assertTrue("the spec copy says spec 1.1", json.contains("\"spec\": \"1.1\""))
+        assertTrue("the spec copy says spec 1.2", json.contains("\"spec\": \"1.2\""))
         Regex("\"id\": \"([^\"]+)\"").findAll(json).map { it.groupValues[1] }.toSet()
     }
 
@@ -34,7 +34,8 @@ class SpecIdsTest {
                     method.name == "lobbyTopRowTile" -> (method.invoke(TestIds, 987654) as String).replace("987654", "{m}")
                     else -> (method.invoke(TestIds, 987654) as String).replace(
                         "987654",
-                        if (method.name.startsWith("slow") || method.name.startsWith("orders") || method.name.startsWith("lobby")) "{n}" else "{id}",
+                        if (method.name.startsWith("slow") || method.name.startsWith("orders") || method.name.startsWith("lobby") ||
+                            method.name.startsWith("feed")) "{n}" else "{id}",
                     )
                 }
             }
@@ -77,6 +78,7 @@ class SpecIdsTest {
             "lobbyRow" to "lobby_row_{n}", "lobbyRowPosition" to "lobby_row_{n}_position", "lobbyRowTile" to "lobby_row_{n}_tile_{m}",
             "lobbyTopRowTile" to "lobby_top_row_tile_{m}",
             "lobbyGridCell" to "lobby_grid_cell_{n}", "lobbyInnerRow" to "lobby_inner_row_{n}", "lobbyBoardCell" to "lobby_board_cell_{col}{row}",
+            "lobbySheetMoreRow" to "lobby_sheet_more_row_{n}", "feedRow" to "feed_row_{n}",
         )
         Regex("TestIds(?:::|\\.)([a-z][A-Za-z]+)").findAll(source).forEach { m -> templates[m.groupValues[1]]?.let(named::add) }
         if ("TestIds.lobbySheetButtons" in source) named += TestIds.lobbySheetButtons
@@ -102,6 +104,7 @@ class SpecIdsTest {
                 "lobby_grid_cell_{n}" -> (1..Lobby.GRID_CELLS).map(TestIds::lobbyGridCell)
                 "lobby_inner_row_{n}" -> (1..Lobby.INNER_LINES).map(TestIds::lobbyInnerRow)
                 "lobby_board_cell_{col}{row}" -> (1..Lobby.BOARD).flatMap { r -> (1..Lobby.BOARD).map { c -> TestIds.lobbyBoardCell(c, r) } }
+                "lobby_sheet_more_row_{n}" -> (1..Lobby.SHEET_MORE_LINES).map(TestIds::lobbySheetMoreRow)
                 else -> listOf(id)
             }
         }

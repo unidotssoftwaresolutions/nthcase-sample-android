@@ -208,6 +208,11 @@ class ScreenPicturesTest {
         compose.tap(TestIds.LAB_LOBBY)
         shot("30-lobby-no-pager")
         compose.tap(TestIds.LOBBY_PAGER_SHOWN)
+
+        // the Feed (spec 1.2), as it opens
+        compose.tap(TestIds.TOP_BAR_BACK)
+        compose.tap(TestIds.LAB_FEED)
+        shot("32-feed")
     }
 
     private companion object {

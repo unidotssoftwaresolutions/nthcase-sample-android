@@ -82,6 +82,16 @@ object Lobby {
     const val BACK_TO_LOBBY = "Back to the lobby"
     val barItems = listOf("Home", "Live", "Saved", "Offers")
     val sheetButtons = listOf("Open", "Preview", "Saved", "Rate")
+
+    /** The quick sheet's More like this (spec 1.2): 20 lines in the sheet's own scroller, under its four buttons. */
+    const val SHEET_MORE_LINES = 20
+    const val MORE_LIKE_THIS = "More like this"
+
+    /** A line of More like this, after the sheet's title: "Like Bedside Lamp · 7 of 20". */
+    fun sheetMoreLine(title: String, n: Int): String = "Like $title · $n of $SHEET_MORE_LINES"
+
+    /** The quick sheet's content is half the window high: it opens whole and never grows, so the lines run past its foot. */
+    const val SHEET_HEIGHT_FRACTION = 0.5f
 }
 
 /** How a touch came: the words the touch log starts each line with. */

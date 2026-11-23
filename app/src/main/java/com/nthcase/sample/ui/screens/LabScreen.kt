@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.nthcase.sample.TestIds
+import com.nthcase.sample.data.Feed
 import com.nthcase.sample.ui.Icons
 import com.nthcase.sample.ui.MossgroveTopBar
 import com.nthcase.sample.ui.Routes
@@ -32,6 +33,7 @@ private val benches = listOf(
     Bench(TestIds.LAB_GIFT_CARDS, Routes.GIFT_CARDS, "Gift cards", "No test ids at all: find things by their text"),
     Bench(TestIds.LAB_LOBBY, Routes.LOBBY, "Lobby", "A pager, rows, a grid, a list in the list, a board and a late bar item, with a touch log"),
     Bench(TestIds.LAB_LOBBY_VIEWS, Routes.LOBBY_VIEWS, "Lobby (Views)", "The same Lobby, built with Android Views"),
+    Bench(TestIds.LAB_FEED, Routes.FEED, Feed.TITLE, Feed.LAB_LINE),
 )
 
 /** The Lab: Mossgrove's second cabinet, one drawer per test bench. It says plainly what each one is for. */

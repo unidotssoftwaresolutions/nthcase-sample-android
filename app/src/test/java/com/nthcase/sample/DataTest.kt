@@ -4,12 +4,17 @@ import com.nthcase.sample.data.Cart
 import com.nthcase.sample.data.Catalog
 import com.nthcase.sample.data.ClubForm
 import com.nthcase.sample.data.Category
+import com.nthcase.sample.data.Feed
 import com.nthcase.sample.data.FormRules
+import com.nthcase.sample.data.Lobby
 import com.nthcase.sample.data.ShakeDetector
+import com.nthcase.sample.data.Touch
+import com.nthcase.sample.data.TouchLog
 import com.nthcase.sample.data.formatPrice
 import com.nthcase.sample.data.itemNumber
 import com.nthcase.sample.ui.screens.swipeDirection
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -92,5 +97,39 @@ class DataTest {
         assertEquals("up", swipeDirection(10f, -300f, 100f))
         assertEquals("down", swipeDirection(-10f, 300f, 100f))
         assertNull(swipeDirection(40f, 40f, 100f))
+    }
+
+    /** Spec 1.2: More like this reads after the sheet's title, and a tap on a line is logged as a button's is. */
+    @Test
+    fun more_like_this_reads_after_the_sheets_title() {
+        assertEquals(20, Lobby.SHEET_MORE_LINES)
+        assertEquals("Like Bedside Lamp · 1 of 20", Lobby.sheetMoreLine("Bedside Lamp", 1))
+        assertEquals("Like Warm, low desk lamps · 20 of 20", Lobby.sheetMoreLine(Lobby.banners[1], 20))
+        assertEquals("lobby_sheet_more_row_7", TestIds.lobbySheetMoreRow(7))
+        val log = TouchLog()
+        log.add(Touch.Tap, Lobby.sheetMoreLine("Bedside Lamp", 7), "quick sheet, Bedside Lamp")
+        assertEquals("Tapped: Like Bedside Lamp · 7 of 20 (quick sheet, Bedside Lamp)", log.text)
+    }
+
+    /** Spec 1.2: the Feed loads when its third row from the end shows, 20 at a time, with no end. */
+    @Test
+    fun the_feed_loads_when_its_third_row_from_the_end_shows() {
+        assertEquals("Feed row 1", Feed.row(1))
+        assertEquals("feed_row_61", TestIds.feedRow(61))
+        assertEquals(18, Feed.trigger(20))
+        assertFalse(Feed.startsLoad(lastShown = 17, count = 20, loading = false))
+        assertTrue(Feed.startsLoad(lastShown = 18, count = 20, loading = false))
+        assertFalse("no second load while one runs", Feed.startsLoad(lastShown = 20, count = 20, loading = true))
+        assertFalse(Feed.startsLoad(lastShown = 37, count = 40, loading = false))
+        assertTrue(Feed.startsLoad(lastShown = 38, count = 40, loading = false))
+        // items as the list's layout places them: (index, offset, size), a view from 0 to 700
+        val rows = (0 until 20).map { Triple(it, it * 56 - 252, 56) }
+        assertEquals("row 18's top is at the view's end: not shown", 17, Feed.lastShown(rows, 0, 700, 20))
+        val further = (0 until 20).map { Triple(it, it * 56 - 253, 56) }
+        assertEquals(18, Feed.lastShown(further, 0, 700, 20))
+        // the spinner row after the last row is not a row
+        val atTheEnd = (0 until 21).map { Triple(it, it * 56 - 500, 56) }
+        assertEquals(20, Feed.lastShown(atTheEnd, 0, 700, 20))
+        assertEquals(0, Feed.lastShown(emptyList(), 0, 700, 20))
     }
 }

@@ -46,6 +46,7 @@ import com.nthcase.sample.ui.screens.FormScreen
 import com.nthcase.sample.ui.screens.GestureScreen
 import com.nthcase.sample.ui.screens.GiftCardsScreen
 import com.nthcase.sample.ui.screens.ItemScreen
+import com.nthcase.sample.ui.screens.FeedScreen
 import com.nthcase.sample.ui.screens.LobbyScreen
 import com.nthcase.sample.ui.screens.LobbyViewsScreen
 import com.nthcase.sample.ui.screens.LabScreen
@@ -73,6 +74,7 @@ object Routes {
     const val GIFT_CARDS = "giftcards"
     const val LOBBY = "lobby"
     const val LOBBY_VIEWS = "lobby_views"
+    const val FEED = "feed"
 
     fun item(id: String) = "item/$id"
 
@@ -198,6 +200,7 @@ fun MossgroveApp() {
                     composable(Routes.GIFT_CARDS) { GiftCardsScreen(onBack = { nav.upOrShop() }) }
                     composable(Routes.LOBBY) { LobbyScreen(onBack = { nav.upOrShop() }) }
                     composable(Routes.LOBBY_VIEWS) { LobbyViewsScreen() }
+                    composable(Routes.FEED) { FeedScreen(onBack = { nav.upOrShop() }) }
                 }
             }
         }

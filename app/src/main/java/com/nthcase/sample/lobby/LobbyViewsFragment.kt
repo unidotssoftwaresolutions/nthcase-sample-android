@@ -666,13 +666,19 @@ class LobbyViewsFragment : Fragment(R.layout.fragment_lobby) {
         showPanel(promo)
     }
 
+    /**
+     * The quick sheet: Material's BottomSheetDialog, a window of its own. Its content is half the window high, and the
+     * sheet opens expanded, so it shows whole at that height and never grows. The title and the four buttons stay put;
+     * under them, More like this (spec 1.2) is the sheet's own RecyclerView, which fills the rest, so its 20 lines run
+     * past the sheet's foot and come only by scrolling inside it.
+     */
     private fun openSheet(title: String, open: () -> Unit) {
         sheet?.dismiss()
         val dialog = BottomSheetDialog(requireContext())
         val content = LinearLayout(requireContext()).apply {
             id = idOf("lobby_sheet")
             orientation = LinearLayout.VERTICAL
-            setPadding(16.dp, 16.dp, 16.dp, 24.dp)
+            setPadding(16.dp, 16.dp, 16.dp, 0)
             addView(text(M.attr.textAppearanceTitleLarge).apply {
                 id = idOf("lobby_sheet_title")
                 text = title
@@ -694,12 +700,51 @@ class LobbyViewsFragment : Fragment(R.layout.fragment_lobby) {
                 }
             }, LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT))
         }
-        dialog.setContentView(content)
+        content.addView(text(M.attr.textAppearanceTitleSmall, color(androidx.appcompat.R.attr.colorPrimary)).apply {
+            text = Lobby.MORE_LIKE_THIS
+            isAccessibilityHeading = true
+            setPadding(0, 8.dp, 0, 4.dp)
+        })
+        content.addView(sheetMore(title, dialog), LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f))
+        val height = (resources.configuration.screenHeightDp * Lobby.SHEET_HEIGHT_FRACTION).roundToInt().dp
+        dialog.setContentView(content, ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, height))
         dialog.behavior.state = BottomSheetBehavior.STATE_EXPANDED
         dialog.behavior.skipCollapsed = true
         dialog.setOnDismissListener { if (sheet === dialog) sheet = null }
         sheet = dialog
         dialog.show()
+    }
+
+    /** More like this: 20 lines, each touched as a sheet button is, so a tap is logged and closes the sheet. */
+    private fun sheetMore(title: String, dialog: BottomSheetDialog): RecyclerView = RecyclerView(requireContext()).apply {
+        id = idOf("lobby_sheet_more")
+        layoutManager = LinearLayoutManager(requireContext())
+        addItemDecoration(DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL))
+        adapter = object : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+            override fun getItemCount() = Lobby.SHEET_MORE_LINES
+            override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) = object : RecyclerView.ViewHolder(
+                text(M.attr.textAppearanceBodyLarge).apply {
+                    layoutParams = RecyclerView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+                    minHeight = 48.dp
+                    gravity = Gravity.CENTER_VERTICAL
+                    setPadding(0, 12.dp, 0, 12.dp)
+                    foreground = selectable()
+                },
+            ) {}
+
+            override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+                val n = position + 1
+                val line = Lobby.sheetMoreLine(title, n)
+                (holder.itemView as TextView).apply {
+                    id = idOf("lobby_sheet_more_row_$n")
+                    text = line
+                    setOnClickListener {
+                        log.add(Touch.Tap, line, "quick sheet, $title")
+                        dialog.dismiss()
+                    }
+                }
+            }
+        }
     }
 
     /** The quick sheet that is open, if any: the tests read its window. */

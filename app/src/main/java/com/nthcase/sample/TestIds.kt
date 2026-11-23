@@ -83,6 +83,7 @@ object TestIds {
     const val LAB_GIFT_CARDS = "lab_gift_cards"
     const val LAB_LOBBY = "lab_lobby"
     const val LAB_LOBBY_VIEWS = "lab_lobby_views"
+    const val LAB_FEED = "lab_feed"
 
     // the Lobby (spec 1.1). The Compose build tags these; the Views build declares them as view ids (res/values/lobby_ids.xml).
     const val LOBBY_SCREEN = "lobby_screen"
@@ -133,6 +134,18 @@ object TestIds {
     fun lobbyBoardCell(col: Int, row: Int) = "lobby_board_cell_${'a' + (col - 1)}$row"
     val lobbySheetButtons = listOf(LOBBY_SHEET_OPEN, LOBBY_SHEET_PREVIEW, LOBBY_SHEET_SAVED, LOBBY_SHEET_RATE)
     val lobbyBarItems = listOf(LOBBY_BAR_HOME, LOBBY_BAR_LIVE, LOBBY_BAR_SAVED, LOBBY_BAR_OFFERS)
+
+    // spec 1.2: the quick sheet's More like this, in both Lobbies (the Views one declares them in res/values/lobby_ids.xml)
+    const val LOBBY_SHEET_MORE = "lobby_sheet_more"
+    /** [n] from 1 to 20: a line of More like this. */
+    fun lobbySheetMoreRow(n: Int) = "lobby_sheet_more_row_$n"
+
+    // the Feed (spec 1.2), Compose only
+    const val FEED_SCREEN = "feed_screen"
+    const val FEED_LIST = "feed_list"
+    const val FEED_LOADING = "feed_loading"
+    /** [n] from 1, with no last row. */
+    fun feedRow(n: Int) = "feed_row_$n"
 
     // form
     const val FORM_SCREEN = "form_screen"

@@ -109,7 +109,26 @@ class ScreenIdsTest {
         compose.signIn()
         compose.tap(TestIds.NAV_LAB)
         present(TestIds.LAB_SCREEN, TestIds.LAB_FORM, TestIds.LAB_GESTURES, TestIds.LAB_WEBVIEW, TestIds.LAB_SLOW, TestIds.LAB_ORDERS, TestIds.LAB_GIFT_CARDS,
-            TestIds.LAB_LOBBY, TestIds.LAB_LOBBY_VIEWS)
+            TestIds.LAB_LOBBY, TestIds.LAB_LOBBY_VIEWS, TestIds.LAB_FEED)
+    }
+
+    /** The Feed (1.2): its rows at open, the spinner row once the third row from the end shows, then the next 20. */
+    @Test
+    fun feed() {
+        compose.signIn()
+        compose.openLab(TestIds.LAB_FEED)
+        present(TestIds.FEED_SCREEN, TestIds.FEED_LIST, TestIds.feedRow(1), TestIds.TOP_BAR_TITLE, TestIds.TOP_BAR_BACK)
+        compose.mainClock.autoAdvance = false
+        // to the end of the 20 rows: row 18 shows, the load starts, and the spinner row comes after row 20
+        compose.onNodeWithTag(TestIds.FEED_LIST).performScrollToIndex(19)
+        compose.mainClock.advanceTimeBy(50)
+        compose.onNodeWithTag(TestIds.FEED_LIST).performScrollToIndex(20)
+        compose.mainClock.advanceTimeBy(50)
+        present(TestIds.FEED_LOADING)
+        compose.mainClock.advanceTimeBy(1_000)
+        compose.mainClock.autoAdvance = true
+        compose.onNodeWithTag(TestIds.FEED_LIST).performScrollToIndex(20)
+        present(TestIds.feedRow(21))
     }
 
     @Test
@@ -229,7 +248,10 @@ class ScreenIdsTest {
         compose.tap(TestIds.LOBBY_DETAIL_BACK)
         compose.onNodeWithTag(TestIds.lobbyRowTile(1, 1)).performTouchInput { longClick() }
         compose.waitForIdle()
-        present(TestIds.LOBBY_SHEET, TestIds.LOBBY_SHEET_TITLE, *TestIds.lobbySheetButtons.toTypedArray())
+        present(TestIds.LOBBY_SHEET, TestIds.LOBBY_SHEET_TITLE, *TestIds.lobbySheetButtons.toTypedArray(), TestIds.LOBBY_SHEET_MORE,
+            TestIds.lobbySheetMoreRow(1))
+        compose.onNodeWithTag(TestIds.LOBBY_SHEET_MORE).performScrollToIndex(Lobby.SHEET_MORE_LINES - 1)
+        present(TestIds.lobbySheetMoreRow(Lobby.SHEET_MORE_LINES))
         compose.tap(TestIds.LOBBY_SHEET_PREVIEW)
         compose.tap(TestIds.LOBBY_BAR_SAVED)
         present(TestIds.LOBBY_SAVED_SCREEN)
@@ -259,9 +281,14 @@ class ScreenIdsTest {
         org.robolectric.shadows.ShadowLooper.idleMainLooper()
         val sheet = org.robolectric.shadows.ShadowDialog.getLatestDialog()
         assertNotNull("the quick sheet is open", sheet)
-        (listOf(TestIds.LOBBY_SHEET, TestIds.LOBBY_SHEET_TITLE) + TestIds.lobbySheetButtons).forEach { name ->
+        (listOf(TestIds.LOBBY_SHEET, TestIds.LOBBY_SHEET_TITLE) + TestIds.lobbySheetButtons + listOf(TestIds.LOBBY_SHEET_MORE, TestIds.lobbySheetMoreRow(1))).forEach { name ->
             assertNotNull("$name is in the sheet", sheet.findViewById<View>(activity.resources.getIdentifier(name, "id", activity.packageName)))
         }
+        val more = sheet.findViewById<androidx.recyclerview.widget.RecyclerView>(activity.resources.getIdentifier(TestIds.LOBBY_SHEET_MORE, "id", activity.packageName))
+        compose.runOnUiThread { more.scrollToPosition(Lobby.SHEET_MORE_LINES - 1) }
+        org.robolectric.shadows.ShadowLooper.idleMainLooper()
+        val last = TestIds.lobbySheetMoreRow(Lobby.SHEET_MORE_LINES)
+        assertNotNull("$last is in the sheet", sheet.findViewById<View>(activity.resources.getIdentifier(last, "id", activity.packageName)))
     }
 
     @Test

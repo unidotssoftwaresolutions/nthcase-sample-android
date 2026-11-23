@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Generated from nthcase/test-ids.json (spec 1.1): every id of the Lobby, expanded, so the Android Views Lobby can
+<!-- Generated from nthcase/test-ids.json (spec 1.2): every id of the Lobby, expanded, so the Android Views Lobby can
      give each view its spec id. Appium reads them as com.nthcase.sample:id/<name>. SpecIdsTest checks this list
      against the JSON, so a change to the spec that is not copied here fails the build. -->
 <resources>
@@ -875,4 +875,25 @@
     <item name="lobby_sheet_preview" type="id" />
     <item name="lobby_sheet_saved" type="id" />
     <item name="lobby_sheet_rate" type="id" />
+    <item name="lobby_sheet_more" type="id" />
+    <item name="lobby_sheet_more_row_1" type="id" />
+    <item name="lobby_sheet_more_row_2" type="id" />
+    <item name="lobby_sheet_more_row_3" type="id" />
+    <item name="lobby_sheet_more_row_4" type="id" />
+    <item name="lobby_sheet_more_row_5" type="id" />
+    <item name="lobby_sheet_more_row_6" type="id" />
+    <item name="lobby_sheet_more_row_7" type="id" />
+    <item name="lobby_sheet_more_row_8" type="id" />
+    <item name="lobby_sheet_more_row_9" type="id" />
+    <item name="lobby_sheet_more_row_10" type="id" />
+    <item name="lobby_sheet_more_row_11" type="id" />
+    <item name="lobby_sheet_more_row_12" type="id" />
+    <item name="lobby_sheet_more_row_13" type="id" />
+    <item name="lobby_sheet_more_row_14" type="id" />
+    <item name="lobby_sheet_more_row_15" type="id" />
+    <item name="lobby_sheet_more_row_16" type="id" />
+    <item name="lobby_sheet_more_row_17" type="id" />
+    <item name="lobby_sheet_more_row_18" type="id" />
+    <item name="lobby_sheet_more_row_19" type="id" />
+    <item name="lobby_sheet_more_row_20" type="id" />
 </resources>

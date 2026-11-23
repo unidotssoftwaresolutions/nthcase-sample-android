@@ -10,10 +10,12 @@ import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToIndex
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeUp
 import androidx.compose.ui.unit.dp
 import androidx.core.widget.NestedScrollView
 import androidx.recyclerview.widget.RecyclerView
@@ -212,6 +214,53 @@ class LobbyComposeTest {
         assertEquals("Touches: 0", count())
     }
 
+    /**
+     * Spec 1.2: the quick sheet's More like this is the sheet's own scroller, in the sheet's window. Its first line is in
+     * sight and its last is past the sheet's foot; swipes inside it bring line 20 and move neither the sheet nor the Lobby
+     * under it, and touch nothing; a tap on a line is logged as a button's is and closes the sheet.
+     */
+    @Test
+    fun more_like_this_scrolls_inside_the_sheet() {
+        open()
+        val topRow = compose.onNodeWithTag(TestIds.LOBBY_TOP_ROW_POSITION).fetchSemanticsNode().config[SemanticsProperties.ContentDescription]
+        compose.onNodeWithTag(TestIds.lobbyTopRowTile(2)).performTouchInput { longClick() }
+        compose.waitForIdle()
+        val window = ShadowDialog.getLatestDialog().window!!.decorView
+        val atOpen = A11yTree.visible(window)
+        record("compose-sheet-more-at-open", atOpen)
+        val more = atOpen.single { it.resourceId == TestIds.LOBBY_SHEET_MORE }
+        assertTrue("More like this is a scroller", more.scrollable)
+        // a line is a node with its id and its words under it, as a tile is
+        assertTrue(atOpen.any { it.resourceId == TestIds.lobbySheetMoreRow(1) })
+        assertEquals("Like Pocket Notebook · 1 of 20",
+            compose.onNodeWithTag(TestIds.lobbySheetMoreRow(1)).fetchSemanticsNode().config[SemanticsProperties.Text].joinToString { it.text })
+        assertFalse("line 20 is past the sheet's foot at open", atOpen.any { it.resourceId == TestIds.lobbySheetMoreRow(20) })
+        val sheet = atOpen.single { it.resourceId == TestIds.LOBBY_SHEET }.bounds
+        assertTrue("the scroller ends at the sheet's foot", more.bounds.bottom <= sheet.bottom)
+
+        var swipes = 0
+        fun lastInSight() = A11yTree.visible(window).any { it.resourceId == TestIds.lobbySheetMoreRow(20) }
+        while (!lastInSight() && swipes < 25) {
+            compose.onNodeWithTag(TestIds.LOBBY_SHEET_MORE).performTouchInput { swipeUp() }
+            compose.waitForIdle()
+            swipes++
+        }
+        val after = A11yTree.visible(window)
+        record("compose-sheet-more-after-${swipes}-swipes", after)
+        assertTrue("line 20 in sight after $swipes swipes", after.any { it.resourceId == TestIds.lobbySheetMoreRow(20) })
+        assertEquals("the sheet did not move", sheet, after.single { it.resourceId == TestIds.LOBBY_SHEET }.bounds)
+        assertEquals("the swipes touched nothing", "Long-pressed: Pocket Notebook (top row, tile 2)", log())
+        assertEquals("Touches: 1", count())
+
+        compose.onNodeWithTag(TestIds.lobbySheetMoreRow(20)).performClick()
+        compose.waitForIdle()
+        assertTrue(log().startsWith("Tapped: Like Pocket Notebook · 20 of 20 (quick sheet, Pocket Notebook)"))
+        assertEquals("Touches: 2", count())
+        assertTrue("the sheet closed", compose.onAllNodesWithTag(TestIds.LOBBY_SHEET).fetchSemanticsNodes().isEmpty())
+        compose.onNodeWithTag(TestIds.LOBBY_DETAIL).assertDoesNotExist()
+        assertEquals("the Lobby under the sheet did not move", topRow,
+            compose.onNodeWithTag(TestIds.LOBBY_TOP_ROW_POSITION).fetchSemanticsNode().config[SemanticsProperties.ContentDescription])
+    }
 }
 
 /**
@@ -378,6 +427,61 @@ class LobbyViewsTest {
         assertEquals(Lobby.NOTHING_TOUCHED, log())
         assertEquals("Touches: 0", fragment.log.countText)
         assertTrue("the footer is on screen", tree().any { it.resourceId == "com.nthcase.sample:id/${TestIds.LOBBY_FOOTER}" })
+    }
+
+    /**
+     * Spec 1.2, Lobby (Views): More like this is the BottomSheetDialog's own RecyclerView. A finger's swipes inside it,
+     * as MotionEvents through the sheet's window, bring line 20 and move neither the sheet nor the Lobby, and touch
+     * nothing; a tap on a line is logged as a button's is and closes the sheet.
+     */
+    @Test
+    fun more_like_this_scrolls_inside_the_sheet() {
+        open()
+        val (x, y) = centre(view(TestIds.lobbyTopRowTile(2)))
+        Finger(decor).longPress(x, y)
+        val sheet = fragment.openSheet
+        assertNotNull("the quick sheet is open", sheet)
+        Finger.idle(500)
+        val window = sheet!!.window!!.decorView
+        fun line(n: Int) = "com.nthcase.sample:id/${TestIds.lobbySheetMoreRow(n)}"
+        val atOpen = A11yTree.visible(window)
+        record("views-sheet-more-at-open", atOpen)
+        val more = atOpen.single { it.resourceId == "com.nthcase.sample:id/${TestIds.LOBBY_SHEET_MORE}" }
+        assertTrue("More like this is a scroller", more.scrollable)
+        assertEquals("Like Pocket Notebook · 1 of 20", atOpen.single { it.resourceId == line(1) }.text)
+        assertFalse("line 20 is past the sheet's foot at open", atOpen.any { it.resourceId == line(20) })
+        val content = sheet.findViewById<View>(fragment.idOf(TestIds.LOBBY_SHEET))!!
+        val sheetAt = IntArray(2).also(content::getLocationOnScreen).toList()
+
+        val finger = Finger(window)
+        var swipes = 0
+        while (A11yTree.visible(window).none { it.resourceId == line(20) } && swipes < 25) {
+            val b = more.bounds
+            val fromY = b.top + b.height() * 4 / 5
+            val toY = b.top + b.height() / 5
+            finger.down(b.centerX(), fromY)
+            for (i in 1..10) {
+                Finger.idle(16)
+                finger.move(b.centerX(), fromY + (toY - fromY) * i / 10)
+            }
+            Finger.idle(16)
+            finger.up(b.centerX(), toY)
+            Finger.idle(500)
+            swipes++
+        }
+        val after = A11yTree.visible(window)
+        record("views-sheet-more-after-${swipes}-swipes", after)
+        assertTrue("line 20 in sight after $swipes swipes", after.any { it.resourceId == line(20) })
+        assertEquals("the sheet did not move", sheetAt, IntArray(2).also(content::getLocationOnScreen).toList())
+        assertEquals("the swipes touched nothing", "Long-pressed: Pocket Notebook (top row, tile 2)", log())
+
+        sheet.findViewById<View>(fragment.idOf(TestIds.lobbySheetMoreRow(20)))!!.performClick()
+        Finger.idle(300)
+        assertTrue(log().startsWith("Tapped: Like Pocket Notebook · 20 of 20 (quick sheet, Pocket Notebook)"))
+        assertEquals("Touches: 2", fragment.log.countText)
+        assertNull("the sheet closed", fragment.openSheet)
+        assertEquals(View.GONE, view<View>(TestIds.LOBBY_DETAIL).visibility)
+        assertEquals("Top 10: tiles 1–3 of 10", view<View>(TestIds.LOBBY_TOP_ROW_POSITION).contentDescription.toString())
     }
 
     @Test

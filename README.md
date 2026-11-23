@@ -6,9 +6,10 @@ Clone it, build it, and run your first NthCase test on it in minutes.
 
 It is one of five identical Mossgrove apps. The same screens, test ids, texts and scenarios are built in Kotlin +
 Jetpack Compose (this one), SwiftUI, Flutter, React Native and Ionic, all from one spec: [SPEC.md](SPEC.md),
-**spec 1.1**. Every verb NthCase supports has a place to land, and so do the hard cases real apps have: a slow screen,
-a failed load with retry, a web view, a system permission prompt, a modal, a screen with no test ids at all, and (new
-in 1.1) the **Lobby**: a screen of many scrollers with a touch log that says if anything was touched by accident.
+**spec 1.2**. Every verb NthCase supports has a place to land, and so do the hard cases real apps have: a slow screen,
+a failed load with retry, a web view, a system permission prompt, a modal, a screen with no test ids at all, (new
+in 1.1) the **Lobby**: a screen of many scrollers with a touch log that says if anything was touched by accident, and
+(new in 1.2) a quick sheet whose lines scroll inside it and the **Feed**, a list that never ends.
 
 - No network, no analytics, no ads, no tracking, no third-party SDKs. Everything is seeded inside the app, so every run
   is the same.
@@ -31,8 +32,10 @@ in 1.1) the **Lobby**: a screen of many scrollers with a touch log that says if 
 | <img src="docs/screenshots/light/25-lobby.png" width="180" alt="Lobby"> | <img src="docs/screenshots/light/26-lobby-board.png" width="180" alt="Lobby, the board"> | <img src="docs/screenshots/light/27-lobby-sheet.png" width="180" alt="Lobby, quick sheet"> | <img src="docs/screenshots/light/28-lobby-views.png" width="180" alt="Lobby (Views)"> |
 | Lobby, pager off | Lobby (Views), pager off | Lobby, pager off (dark) | Lobby (Views), pager off (dark) |
 | <img src="docs/screenshots/light/30-lobby-no-pager.png" width="180" alt="Lobby, pager off"> | <img src="docs/screenshots/light/31-lobby-views-no-pager.png" width="180" alt="Lobby (Views), pager off"> | <img src="docs/screenshots/dark/30-lobby-no-pager.png" width="180" alt="Lobby, pager off, dark"> | <img src="docs/screenshots/dark/31-lobby-views-no-pager.png" width="180" alt="Lobby (Views), pager off, dark"> |
+| Feed | Feed (dark) | Lobby, quick sheet (dark) | Lab (dark) |
+| <img src="docs/screenshots/light/32-feed.png" width="180" alt="Feed"> | <img src="docs/screenshots/dark/32-feed.png" width="180" alt="Feed, dark"> | <img src="docs/screenshots/dark/27-lobby-sheet.png" width="180" alt="Lobby, quick sheet, dark"> | <img src="docs/screenshots/dark/11-lab.png" width="180" alt="Lab, dark"> |
 
-All 31 screens, light and dark, are in [docs/screenshots](docs/screenshots). They are drawn on the JVM by the tests
+All 32 screens, light and dark, are in [docs/screenshots](docs/screenshots). They are drawn on the JVM by the tests
 (Robolectric), not on a device.
 
 ## Test account
@@ -65,8 +68,12 @@ build). Every [release](../../releases) also has a ready-built one.
 
 This runs the unit tests and the Compose UI tests on the JVM with Robolectric: no emulator. They check every spec id
 on its screen, in the accessibility tree Appium reads. They play the scenarios' flows, and draw the screenshots.
-`./gradlew updateScreenshots` copies the pictures into `docs/screenshots`. One instrumented smoke test is in
-`app/src/androidTest` for an emulator or device of your own: `./gradlew connectedDebugAndroidTest`.
+`./gradlew updateScreenshots` copies the pictures into `docs/screenshots`. The instrumented tests in `app/src/androidTest`
+are for an emulator or device of your own: a smoke test, and spec 1.2's sheet and Feed on a real window manager and a
+real input pipeline (`SheetAndFeedTest`). `./gradlew connectedDebugAndroidTest` runs them on **every** device adb lists,
+so with more than one attached, build the two APKs (`./gradlew assembleDebug assembleDebugAndroidTest`), install them on
+the one you mean with `adb -s <serial> install -r`, and run
+`adb -s <serial> shell am instrument -w -r com.nthcase.sample.test/androidx.test.runner.AndroidJUnitRunner`.
 
 | | |
 | --- | --- |
@@ -108,6 +115,8 @@ Mossgrove and run it on my Android phone".
 | swipe a pager; longpress, doubletap on tiles and cells | Lab › Lobby | 13, 14, 15 |
 | a control that appears late (waitFor), and a touch log that catches a scroll acting as a touch | Lab › Lobby, Lab › Lobby (Views) | 16, 17, 18 |
 | the same, with the pager off, so the first scrollable is the Top 10 row of tiles | Lab › Lobby, Lab › Lobby (Views) | 19, 20 |
+| scroll inside a sheet, its lines past the sheet's foot (1.2) | Lab › Lobby: a tile's long press, then More like this | — |
+| scroll on a list that never ends, its spinner row 1 s between loads (1.2) | Lab › Feed | — |
 
 The full table, with every check type and the known gaps, is in [SPEC.md §8](SPEC.md#8-verb-coverage).
 
@@ -129,16 +138,31 @@ Lobby (Views) uses the Lobby's ids as view ids, declared in `res/values/lobby_id
 checks it), so Appium sees `resource-id="com.nthcase.sample:id/lobby_pager"` there and `resource-id="lobby_pager"` in
 the Compose Lobby.
 
+## More like this and the Feed (spec 1.2)
+
+The Lobby's quick sheet (a long press on a tile or a banner) has **More like this** under its four buttons: 20 lines,
+"Like Bedside Lamp · 1 of 20" and on, in the sheet's own scroller. The sheet's content is half the window high and the
+sheet opens whole at that height and never grows, so the lines run past its foot and come only by scrolling inside it;
+the Lobby under it does not move. A tap on a line is logged as a tap on a sheet button is, and closes the sheet.
+Lab › **Feed** is a list of rows, "Feed row 1" and on: 20 at first, and each time the third row from the end of what
+has come shows, a spinner row after the last row for 1 s, then 20 more. It never ends.
+
+| Part | Lobby (Compose) and Feed | Lobby (Views) |
+| --- | --- | --- |
+| More like this (`lobby_sheet_more`) | a `LazyColumn` under the buttons in the `ModalBottomSheet` (`skipPartiallyExpanded`, content half the window high) | a `RecyclerView` under the buttons in the `BottomSheetDialog` (content half the window high, expanded) |
+| Feed (`feed_list`) | a `LazyColumn`; a load starts from the rows its layout shows | — (the Feed is built once, in Compose) |
+
 ## Layout
 
 ```
-app/src/main/java/com/nthcase/sample/   MainActivity, TestIds, data/, ui/ (Compose screens), settings/ (the Fragment),
+app/src/main/java/com/nthcase/sample/   MainActivity, TestIds, data/ (Feed.kt, 1.2), ui/ (Compose screens, FeedScreen 1.2),
+                                        settings/ (the Fragment),
                                         lobby/ (Lobby (Views): the Fragment, the two-way BoardView, GlyphDrawable)
 app/src/main/res/layout/                fragment_settings.xml, dialog_reset.xml: the XML screen; fragment_lobby.xml
 app/src/main/assets/web/                care-guide.html, the web view's page
 app/src/test/                           JVM tests: data, spec ids, screens, flows, deep link, screenshots, the Lobby,
-                                        and LobbySwipeTest (UiScrollable's swipe injected through both Lobbies)
-app/src/androidTest/                    one instrumented smoke test
+                                        LobbySwipeTest (UiScrollable's swipe injected through both Lobbies), FeedTest (1.2)
+app/src/androidTest/                    instrumented tests: a smoke test, SheetAndFeedTest (1.2)
 art/                                    the original icons, product drawings and launcher mark (SVG)
 nthcase/                                test-ids.json and the scenarios
 docs/screenshots/                       every screen, light and dark
@@ -147,8 +171,8 @@ docs/screenshots/                       every screen, light and dark
 ## CI
 
 Every run is one job on `ubuntu-latest`: the unit tests and the Robolectric UI tests on the JVM, and the APKs, in 1 to
-5 minutes, then "Every check", which lists each check with its outcome. Android has no device suite: no test here needs
-an emulator. It runs on a push to `main`, on a pull
+5 minutes, then "Every check", which lists each check with its outcome. Android has no device suite in CI: the
+instrumented tests in `app/src/androidTest` run on an emulator or a phone of your own (see Build). It runs on a push to `main`, on a pull
 request, on "Run workflow", at 03:17 UTC on the 1st of each month, and before every release: a `v*` tag publishes only when it is
 green. A push that changes only `README.md`, `CONTRIBUTING.md`, `SECURITY.md`, `DESIGN.md`, `LICENSE`, `NOTICE` or
 `docs/screenshots/` starts nothing. To run it by hand, open Actions → build → Run workflow on `main`, or run

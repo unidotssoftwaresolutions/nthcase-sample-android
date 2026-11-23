@@ -5,6 +5,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.gestures.scrollBy as scrollByDelta
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -60,6 +61,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
@@ -703,13 +705,20 @@ private fun SavedPanel(modifier: Modifier) {
     }
 }
 
+/**
+ * The quick sheet: Material 3's ModalBottomSheet, a window of its own. Its content is half the window high and the
+ * sheet skips its partly open state, so it opens whole at that height and never grows. The title and the four buttons
+ * stay put; under them, More like this (spec 1.2) is the sheet's own LazyColumn, which fills the rest, so its 20 lines
+ * run past the sheet's foot and come only by scrolling inside it.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun QuickSheet(target: SheetFor, onButton: (String) -> Unit, onDismiss: () -> Unit) {
     val state = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val height = (LocalConfiguration.current.screenHeightDp * Lobby.SHEET_HEIGHT_FRACTION).dp
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = state) {
         // the sheet is a window of its own, so the ids are exposed again inside it
-        Column(Modifier.testIdRoot().testTag(TestIds.LOBBY_SHEET).fillMaxWidth().padding(start = 16.dp, end = 16.dp, bottom = 24.dp)) {
+        Column(Modifier.testIdRoot().testTag(TestIds.LOBBY_SHEET).fillMaxWidth().height(height).padding(start = 16.dp, end = 16.dp)) {
             Text(
                 target.title,
                 style = MaterialTheme.typography.titleLarge,
@@ -720,6 +729,27 @@ private fun QuickSheet(target: SheetFor, onButton: (String) -> Unit, onDismiss: 
                     onClick = { onButton(label) },
                     modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag(TestIds.lobbySheetButtons[i]),
                 ) { Text(label, modifier = Modifier.fillMaxWidth()) }
+            }
+            Text(
+                Lobby.MORE_LIKE_THIS,
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(top = 8.dp, bottom = 4.dp).semantics { heading() },
+            )
+            LazyColumn(Modifier.fillMaxWidth().weight(1f).testTag(TestIds.LOBBY_SHEET_MORE)) {
+                items(Lobby.SHEET_MORE_LINES) { i ->
+                    val n = i + 1
+                    val line = Lobby.sheetMoreLine(target.title, n)
+                    // touched as a button is: a tap is logged and closes the sheet
+                    Column(Modifier.fillMaxWidth().clickable { onButton(line) }.testTag(TestIds.lobbySheetMoreRow(n))) {
+                        Text(
+                            line,
+                            style = MaterialTheme.typography.bodyLarge,
+                            modifier = Modifier.heightIn(min = 48.dp).padding(vertical = 13.dp),
+                        )
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                    }
+                }
             }
         }
     }
